@@ -31,7 +31,7 @@
 #include <unistd.h> // close lseek read write
 #include <fcntl.h> // open
 #include <dirent.h> // opendir readdir closedir
-
+#include <regex.h>
 extern "C" {
 #include "pci/pci.h" // full path /usr/local/include/pci/pci.h
 }
@@ -1480,6 +1480,16 @@ int main(int argc, const char* argv[])
 		pci_fill_info(dev, PCI_FILL_IDENT | PCI_FILL_BASES | PCI_FILL_ROM_BASE | PCI_FILL_SIZES | PCI_FILL_CLASS);
 		if (IsAmdDisplayDevice(dev))
 		{
+		    char buffer[1024];
+			char *name = pci_lookup_name(pci, buffer, sizeof(buffer), PCI_LOOKUP_DEVICE, dev->vendor_id, dev->device_id);
+			regex_t regex;
+			if (regcomp(&regex, "(Kaveri|Beavercreek|Sumo|Wrestler|Kabini|Mullins|Temash|Trinity|Richland|Stoney|Carrizo|Raven)", REG_ICASE | REG_EXTENDED) == 0) {
+                 if (regexec(&regex, name, 0, NULL, 0) == 0) {
+                    printf("skip apu %s!\n", name);
+                    continue;
+                }
+             }
+		    //printf(" (%s)\n", name);
 			gpus[gpuCount++].dev = dev;
 		}
 	}
